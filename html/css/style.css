@@ -1,0 +1,49 @@
+body {
+    font-family: "Encode Sans", sans-serif;
+    font-weight: 200;
+}
+.banner {
+    background-color: #1976d2;
+    color: white;
+    padding-top: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 15px;
+}
+
+li {
+    margin-top: 5pt;
+}
+
+.banner-button {
+    width: 3rem;
+    height: 3rem;
+    padding: 10px;
+    margin-right: 0.2em;
+}
+
+.app-title {
+    font-weight: 900;
+}
+
+.site-name {
+    font-weight: 400;
+}
+
+.center-toast {
+    left: 50%;
+    position: fixed;
+    transform: translate(-50%, 0px);
+    background-color: #ffc107;
+    color: white;
+}
+
+.export-key {
+    font-size: 50px;
+    font-style: "bold";
+}
+
+.small-alert{
+    font-size: 0.8rem !important;
+    padding: 0.2rem 0.5rem !important;
+}

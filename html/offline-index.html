@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans:wght@200;400;900&display=swap" rel="stylesheet" />
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="position-fixed bottom-0 end-0 p-3 text-center" style="z-index: 11">
+        <div class="toast center-toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="1500">
+            <div class="toast-body">Copiato con successo!</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row banner">
+            <div class="col-6">
+                <h3 class="app-title">Password Manager</h3>
+            </div>
+            <div class="col-6">
+                <div class="row text-right">
+                    <div class="col-12 p-0">
+                        <input type="image" src="img/add.svg" class="banner-button" data-toggle="modal"
+                            data-target="#addCredentialsModal" />
+                        <span>Offline</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12 p-0">
+                <ul id="credential-list" class="list-group"></ul>
+            </div>
+        </div>
+        <div id="addCredentialsModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nuove credenziali</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="newCredentialsForm">
+                            <div class="form-group">
+                                <label for="nameInput">Nome</label>
+                                <input type="text" name="name" class="form-control" id="nameInput"
+                                    placeholder="Inserisci nome del sito/servizio" />
+                            </div>
+                            <div class="form-group">
+                                <label for="usernameInput">Username/Email</label>
+                                <input type="text" name="username" class="form-control" id="usernameInput"
+                                    placeholder="Inserisci username o email" />
+                            </div>
+                            <div class="form-group">
+                                <label for="passwordInput">Password</label>
+                                <input type="password" name="password" class="form-control" id="passwordInput"
+                                    placeholder="Inserisci la password" />
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="addNewCredentials()">
+                            Conferma
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Chiudi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- modal di sblocco wallet-->
+        <div class="modal fade" id="unlockWalletModal" tabindex="-1" role="dialog" data-keyboard="false"
+            data-backdrop="static">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">
+                            Sblocca wallet
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <label for="walletPassword">Password</label>
+                        <input type="password" name="walletPassword" class="form-control" id="walletPassword"
+                            placeholder="Inserisci la password" />
+
+                        <div id="wrongPasswordAlert" class="small-alert alert alert-danger mt-2" style="display: none;" role="alert">
+                            Password errata
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="unlockWallet()">
+                            Sblocca
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- modal di inizializzazione wallet-->
+        <div class="modal fade" id="initWalletModal" tabindex="-1" role="dialog" data-keyboard="false"
+            data-backdrop="static">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">
+                            Inizializza wallet
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <label for="initWalletPassword">Password</label>
+                        <input type="password" name="initWalletPassword" class="form-control" id="initWalletPassword"
+                            placeholder="Inserisci una nuova password" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="initWallet()">
+                            Conferma
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+<script src="js/cryptohelper.js"></script>
+<script src="js/passmanager.js"></script>
+<script src="js/utils.js"></script>
+
+<script>
+    let pwManager = null;
+
+    if (window.localStorage.length == 0) {
+        $("#initWalletModal").modal("show");
+    } else {
+        $("#unlockWalletModal").modal("show");
+    }
+
+    // registrazione service worker per utilizzo offline
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('worker.js');
+    }
+
+
+    function initWallet() {
+        PasswordManager.init($("#initWalletPassword").val()).then((p) => {
+            pwManager = p;
+            $("#initWalletPassword").val("");
+            $("#initWalletModal").modal("hide");
+            renderData();
+        });
+    }
+
+    function unlockWallet() {
+        PasswordManager.newInstance($("#walletPassword").val())
+            .then((p) => {
+                pwManager = p;
+                $("#wrongPasswordAlert").fadeOut();
+                $("#walletPassword").val("");
+                $("#unlockWalletModal").modal("hide");
+                renderData();
+            })
+            .catch((err) => {
+                $("#wrongPasswordAlert").fadeIn();
+            });
+    }
+
+    function renderData() {
+        $("#credential-list").empty();
+        var credentials = pwManager.getCredentials();
+        credentials = credentials.sort((a, b) => {
+            if (a.name > b.name) return 1;
+            if (a.name < b.name) return -1;
+            return 0;
+        });
+        credentials.forEach((element, index) => {
+            let htmlEl = `<li class="list-group-item"> <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="row">
+                                        <div class="col">
+                                            <span class="site-name">${element.name}</span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            ${element.username}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 text-right">
+                                    
+                                    <input
+                                        type="image"
+                                        src="img/copy.svg"
+                                        onclick="copyPassword(${index})"
+                                    />
+                                    <input
+                                        type="image"
+                                        src="img/delete.svg"
+                                        onclick="deleteCredentials(${index})"
+                                        class="ml-3"
+                                    />
+                                </div>
+                            </div>
+                        </li>`;
+            $("#credential-list").append(htmlEl);
+        });
+    }
+
+    function copyPassword(index) {
+        pwManager
+            .getPlaintextPassword(
+                pwManager.getCredentials()[index].password
+            )
+            .then((res) => {
+                navigator.clipboard.writeText(res);
+                $(".toast").toast("show");
+            });
+    }
+
+    function addNewCredentials() {
+        let data = $("#newCredentialsForm")
+            .serializeArray()
+            .reduce((acc, item) => {
+                acc[item.name] = item.value;
+                return acc;
+            }, {});
+        pwManager
+            .storeCredentials(data.name, data.username, data.password)
+            .then((_) => {
+                renderData();
+                $("#newCredentialsForm").trigger("reset");
+                $("#addCredentialsModal").modal("hide");
+            });
+    }
+
+    function deleteCredentials(index) {
+        pwManager.deleteCredentials(pwManager.getCredentials()[index]);
+        renderData();
+    }
+
+</script>
+
+</html>
